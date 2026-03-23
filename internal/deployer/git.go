@@ -10,6 +10,7 @@ import (
 
 	"github.com/deepakvbansode/platform-orchestrator/internal/config"
 	"github.com/deepakvbansode/platform-orchestrator/internal/interpolate"
+	"github.com/deepakvbansode/platform-orchestrator/internal/logger"
 )
 
 // GitDeployer clones a git repo, copies the manifest, commits, and pushes.
@@ -25,6 +26,7 @@ func NewGitDeployer(name string, cfg config.GitDeployerConfig) *GitDeployer {
 func (d *GitDeployer) Name() string { return d.name }
 
 func (d *GitDeployer) Deploy(ctx context.Context, req DeployRequest) error {
+	log := logger.Get()
 	vars := map[string]string{"org": req.Org, "env": req.Env, "workload": req.Workload}
 
 	tmpDir, err := os.MkdirTemp("", "score-gitdeploy-*")
@@ -47,18 +49,19 @@ func (d *GitDeployer) Deploy(ctx context.Context, req DeployRequest) error {
 		if token != "" {
 			url = embedHTTPSToken(url, token)
 		}
+		log.Debug("git deployer auth: https", "token_set", token != "")
 	case "ssh":
 		if d.cfg.Auth.SSHKeyFile != "" {
-			// Quote the key path to handle paths with spaces.
-		// StrictHostKeyChecking=no is intentional for CI environments.
-		env = append(env, fmt.Sprintf(
+			env = append(env, fmt.Sprintf(
 				"GIT_SSH_COMMAND=ssh -i %s -o StrictHostKeyChecking=no",
 				d.cfg.Auth.SSHKeyFile,
 			))
 		}
+		log.Debug("git deployer auth: ssh", "key_file", d.cfg.Auth.SSHKeyFile)
 	}
 
 	run := func(dir string, args ...string) error {
+		log.Debug("exec: git", "args", args)
 		cmd := exec.CommandContext(ctx, "git", args...)
 		cmd.Dir = dir
 		cmd.Env = env
@@ -68,6 +71,7 @@ func (d *GitDeployer) Deploy(ctx context.Context, req DeployRequest) error {
 		return nil
 	}
 
+	log.Debug("cloning gitops repo", "url", d.cfg.URL, "ref", ref)
 	if err := run("", "clone", "--depth", "1", "--branch", ref, url, tmpDir); err != nil {
 		return err
 	}
@@ -81,6 +85,7 @@ func (d *GitDeployer) Deploy(ctx context.Context, req DeployRequest) error {
 	if err := copyFile(req.ManifestsPath, dst); err != nil {
 		return fmt.Errorf("copy manifests: %w", err)
 	}
+	log.Debug("manifest copied to gitops repo", "dest", dst)
 
 	if err := run(tmpDir, "config", "user.email", "score-orchestrator@platform"); err != nil {
 		return err
@@ -98,6 +103,7 @@ func (d *GitDeployer) Deploy(ctx context.Context, req DeployRequest) error {
 	if err := run(tmpDir, "commit", "-m", fmt.Sprintf("deploy: %s/%s/%s", req.Org, req.Env, req.Workload)); err != nil {
 		return err
 	}
+	log.Debug("pushing gitops commit", "ref", ref)
 	return run(tmpDir, "push", "origin", ref)
 }
 

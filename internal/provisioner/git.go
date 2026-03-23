@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 
 	"github.com/deepakvbansode/platform-orchestrator/internal/config"
+	"github.com/deepakvbansode/platform-orchestrator/internal/logger"
 )
 
 // GitSource shallow-clones a git repo and copies *.provisioners.yaml from a subpath.
@@ -20,6 +21,9 @@ func NewGitSource(cfg config.GitProvConfig) *GitSource {
 }
 
 func (s *GitSource) Sync(ctx context.Context, destDir string) error {
+	log := logger.Get()
+	log.Debug("git provisioner sync", "url", s.cfg.URL, "ref", s.cfg.Ref, "path", s.cfg.Path)
+
 	tmpDir, err := os.MkdirTemp("", "score-provisioners-*")
 	if err != nil {
 		return fmt.Errorf("create temp dir for git clone: %w", err)
@@ -32,10 +36,10 @@ func (s *GitSource) Sync(ctx context.Context, destDir string) error {
 	switch s.cfg.Auth.Type {
 	case "https":
 		token := os.Getenv(s.cfg.Auth.TokenEnv)
-		// Embed token in URL: https://token@host/path
 		if token != "" {
 			url = embedHTTPSToken(url, token)
 		}
+		log.Debug("git auth: https", "token_set", token != "")
 	case "ssh":
 		if s.cfg.Auth.SSHKeyFile != "" {
 			env = append(env, fmt.Sprintf(
@@ -43,6 +47,7 @@ func (s *GitSource) Sync(ctx context.Context, destDir string) error {
 				s.cfg.Auth.SSHKeyFile,
 			))
 		}
+		log.Debug("git auth: ssh", "key_file", s.cfg.Auth.SSHKeyFile)
 	}
 
 	ref := s.cfg.Ref
@@ -50,11 +55,13 @@ func (s *GitSource) Sync(ctx context.Context, destDir string) error {
 		ref = "main"
 	}
 
+	log.Debug("exec: git clone (shallow)", "ref", ref)
 	cmd := exec.CommandContext(ctx, "git", "clone", "--depth", "1", "--branch", ref, url, tmpDir)
 	cmd.Env = env
 	if out, err := cmd.CombinedOutput(); err != nil {
 		return fmt.Errorf("git clone failed: %w\n%s", err, string(out))
 	}
+	log.Debug("git clone completed")
 
 	srcDir := tmpDir
 	if s.cfg.Path != "" {
@@ -65,11 +72,13 @@ func (s *GitSource) Sync(ctx context.Context, destDir string) error {
 	if err != nil {
 		return fmt.Errorf("glob provisioners: %w", err)
 	}
+	log.Debug("provisioner files found in repo", "count", len(matches))
 	for _, src := range matches {
 		dst := filepath.Join(destDir, filepath.Base(src))
 		if err := copyFile(src, dst); err != nil {
 			return fmt.Errorf("copy %s: %w", filepath.Base(src), err)
 		}
+		log.Debug("provisioner file copied", "file", filepath.Base(src))
 	}
 	return nil
 }

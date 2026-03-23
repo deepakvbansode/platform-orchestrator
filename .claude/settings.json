@@ -34,7 +34,8 @@
       "Bash(./score-orchestrator deploy:*)",
       "Bash(./score-orchestrator server:*)",
       "Bash(score-k8s generate:*)",
-      "Bash(xargs sed:*)"
+      "Bash(xargs sed:*)",
+      "Bash(make help:*)"
     ]
   }
 }
