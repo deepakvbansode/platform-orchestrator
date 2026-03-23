@@ -8,7 +8,7 @@ import (
 type Config struct {
 	State        StateConfig        `mapstructure:"state"`
 	Provisioners ProvisionersConfig `mapstructure:"provisioners"`
-	Deployers    []DeployerConfig   `mapstructure:"deployers"`
+	Deployer     DeployerConfig     `mapstructure:"deployers"`
 }
 
 type StateConfig struct {
@@ -45,14 +45,13 @@ type LocalProvConfig struct {
 }
 
 type AuthConfig struct {
-	Type       string `mapstructure:"type"`         // "ssh" | "https"
+	Type       string `mapstructure:"type"` // "ssh" | "https"
 	SSHKeyFile string `mapstructure:"ssh_key_file"`
 	TokenEnv   string `mapstructure:"token_env"`
 }
 
 type DeployerConfig struct {
-	Name    string            `mapstructure:"name"`
-	Type    string            `mapstructure:"type"` // "kubectl" | "git" | "webhook"
+	Source  string            `mapstructure:"source"`
 	Kubectl KubectlConfig     `mapstructure:"kubectl"`
 	Git     GitDeployerConfig `mapstructure:"git"`
 	Webhook WebhookConfig     `mapstructure:"webhook"`

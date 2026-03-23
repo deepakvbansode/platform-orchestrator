@@ -16,6 +16,6 @@ type DeployResult struct {
 	Env          string    `json:"env"`
 	Workload     string    `json:"workload"`
 	Status       string    `json:"status"` // "success" | "deploy_failed"
-	DeployersRun []string  `json:"deployers_run"`
+	DeployersRun string    `json:"deployer_run"`
 	DeployedAt   time.Time `json:"deployed_at"`
 }

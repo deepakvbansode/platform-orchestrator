@@ -4,7 +4,7 @@
 state:
   backend: file          # "file" | "s3"
   file:
-    base_path: ./state   # state stored at ./state/{org}/{env}/{workload}/
+    base_path: ./.state   # state stored at ./state/{org}/{env}/{workload}/
   s3:
     bucket: my-platform-state
     prefix: score-state
@@ -14,7 +14,7 @@ state:
 provisioners:
   source: local          # "local" | "git"
   local:
-    path: ./provisioners # *.provisioners.yaml files copied from here
+    path: ./.provisioners # *.provisioners.yaml files copied from here
   git:
     url: git@github.com:my-org/score-provisioners.git
     ref: main            # branch, tag, or commit SHA
@@ -26,13 +26,14 @@ provisioners:
       # token_env: PROVISIONER_GIT_TOKEN
 
 deployers:
-  - name: k8s
+  source: kubectl
+  kkubectl:
     type: kubectl
     kubectl:
-      kubeconfig: ~/.kube/config
-      namespace: "${env}"           # resolved from deploy-time context
-      context: "${org}-${env}"
-  - name: gitops
+      kubeconfig: ./.kube/config
+      namespace: ""          # resolved from deploy-time context - why we need it
+      context: "rancher-desktop"
+  git:
     type: git
     git:
       url: https://github.com/my-org/gitops-repo.git
@@ -41,7 +42,7 @@ deployers:
       auth:
         type: https
         token_env: GITOPS_TOKEN     # export GITOPS_TOKEN=<your-token>
-  - name: cd-trigger
+  webhook:
     type: webhook
     webhook:
       url: https://argocd.internal/api/v1/applications/${workload}/sync

@@ -9,7 +9,7 @@ import (
 type DeployMeta struct {
 	LastDeployedAt   time.Time `json:"last_deployed_at"`
 	LastDeployStatus string    `json:"last_deploy_status"` // "success" | "deploy_failed" | "generate_failed"
-	DeployersRun     []string  `json:"deployers_run"`
+	DeployersRun     string    `json:"deployer_run"`
 }
 
 // WorkloadFiles holds the files needed by the status endpoint.

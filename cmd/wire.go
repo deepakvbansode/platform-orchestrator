@@ -33,21 +33,19 @@ func buildProvisionerSource(cfg *config.Config) (provisioner.ProvisionerSource, 
 	}
 }
 
-func buildDeployers(cfg *config.Config) ([]deployer.Deployer, error) {
-	var deployers []deployer.Deployer
-	for _, dc := range cfg.Deployers {
-		switch dc.Type {
-		case "kubectl":
-			deployers = append(deployers, deployer.NewKubectlDeployer(dc.Name, dc.Kubectl))
-		case "git":
-			deployers = append(deployers, deployer.NewGitDeployer(dc.Name, dc.Git))
-		case "webhook":
-			deployers = append(deployers, deployer.NewWebhookDeployer(dc.Name, dc.Webhook))
-		default:
-			return nil, fmt.Errorf("unknown deployer type: %q (must be kubectl, git, or webhook)", dc.Type)
-		}
+func buildDeployers(cfg *config.Config) (deployer.Deployer, error) {
+
+	switch cfg.Deployer.Source {
+	case "kubectl":
+		return deployer.NewKubectlDeployer("kubectl", cfg.Deployer.Kubectl), nil
+	case "git":
+		return deployer.NewGitDeployer("git", cfg.Deployer.Git), nil
+	case "webhook":
+		return deployer.NewWebhookDeployer("webhook", cfg.Deployer.Webhook), nil
+	default:
+		return nil, fmt.Errorf("unknown deployer type: %q (must be kubectl, git, or webhook)", cfg.Deployer.Source)
 	}
-	return deployers, nil
+
 }
 
 func buildRunner(cfg *config.Config) (*pipeline.Runner, error) {
@@ -66,6 +64,6 @@ func buildRunner(cfg *config.Config) (*pipeline.Runner, error) {
 	return &pipeline.Runner{
 		Backend:     backend,
 		Provisioner: provSource,
-		Deployers:   deployers,
+		Deployer:    deployers,
 	}, nil
 }

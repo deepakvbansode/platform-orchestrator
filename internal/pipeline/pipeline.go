@@ -19,7 +19,7 @@ import (
 type Runner struct {
 	Backend     state.StateBackend
 	Provisioner provisioner.ProvisionerSource
-	Deployers   []deployer.Deployer
+	Deployer    deployer.Deployer
 }
 
 // Run executes the 12-step deploy pipeline for the given request.
@@ -125,7 +125,7 @@ func (r *Runner) Run(ctx context.Context, req DeployRequest) (*DeployResult, *oe
 		meta := &state.DeployMeta{
 			LastDeployedAt:   time.Now().UTC(),
 			LastDeployStatus: "generate_failed",
-			DeployersRun:     []string{},
+			DeployersRun:     "",
 		}
 		_ = r.Backend.PushMeta(ctx, req.Org, req.Env, req.Workload, meta)
 		return nil, oerr.New(oerr.CodeScoreGenerateFailed,
@@ -167,7 +167,7 @@ func (r *Runner) Run(ctx context.Context, req DeployRequest) (*DeployResult, *oe
 	}
 
 	// Step 8: Run deployers in sequence.
-	log.Info("step 8: running deployers", "count", len(r.Deployers))
+	log.Info("step 8: running deployer", r.Deployer)
 	deployReq := deployer.DeployRequest{
 		Org:           req.Org,
 		Env:           req.Env,
@@ -175,17 +175,13 @@ func (r *Runner) Run(ctx context.Context, req DeployRequest) (*DeployResult, *oe
 		ManifestsPath: manifestsFile,
 	}
 	var deployErr error
-	var deployersRun []string
-	for _, d := range r.Deployers {
-		deployersRun = append(deployersRun, d.Name())
-		log.Info("running deployer", "deployer", d.Name())
-		if err := d.Deploy(ctx, deployReq); err != nil {
-			log.Error("deployer failed", "deployer", d.Name(), "error", err)
-			deployErr = fmt.Errorf("deployer %q failed: %w", d.Name(), err)
-			break
-		}
-		log.Info("deployer succeeded", "deployer", d.Name())
+
+	if err := r.Deployer.Deploy(ctx, deployReq); err != nil {
+		log.Error("deployer failed", "deployer", r.Deployer.Name(), "error", err)
+		deployErr = fmt.Errorf("deployer %q failed: %w", r.Deployer.Name(), err)
+
 	}
+	log.Info("deployer succeeded", "deployer", r.Deployer.Name())
 
 	deployStatus := "success"
 	if deployErr != nil {
@@ -211,7 +207,7 @@ func (r *Runner) Run(ctx context.Context, req DeployRequest) (*DeployResult, *oe
 	meta := &state.DeployMeta{
 		LastDeployedAt:   time.Now().UTC(),
 		LastDeployStatus: deployStatus,
-		DeployersRun:     deployersRun,
+		DeployersRun:     r.Deployer.Name(),
 	}
 	if err := r.Backend.PushArtifacts(ctx, req.Org, req.Env, req.Workload, req.ScoreYAML, manifestsYAML, meta); err != nil {
 		log.Error("failed to push artifacts", "error", err)
@@ -220,14 +216,14 @@ func (r *Runner) Run(ctx context.Context, req DeployRequest) (*DeployResult, *oe
 
 	// Steps 11–12: workDir and provTmp cleanup deferred above; return result.
 	log.Info("deploy finished", "org", req.Org, "env", req.Env, "workload", req.Workload,
-		"status", deployStatus, "deployers_run", deployersRun)
+		"status", deployStatus, "deployer_run", r.Deployer.Name())
 
 	result := &DeployResult{
 		Org:          req.Org,
 		Env:          req.Env,
 		Workload:     req.Workload,
 		Status:       deployStatus,
-		DeployersRun: deployersRun,
+		DeployersRun: r.Deployer.Name(),
 		DeployedAt:   meta.LastDeployedAt,
 	}
 	if deployErr != nil {
