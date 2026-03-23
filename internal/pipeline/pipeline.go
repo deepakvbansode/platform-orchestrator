@@ -123,6 +123,11 @@ func (r *Runner) Run(ctx context.Context, req DeployRequest) (*DeployResult, *oe
 	if err != nil && !os.IsNotExist(err) {
 		return nil, oerr.New(oerr.CodeScoreGenerateFailed, "failed to read updated state.yaml", err.Error(), "generate", 500)
 	}
+	// For existing workloads, score-k8s generate must always produce state.yaml.
+	// If it is absent, the ETag concurrency guard cannot be applied safely.
+	if updatedStateYAML == nil && !isFresh {
+		return nil, oerr.New(oerr.CodeScoreGenerateFailed, "score-k8s generate did not produce state.yaml for existing workload", "", "generate", 500)
+	}
 
 	// Read generated manifests.
 	manifestsYAML, err := os.ReadFile(manifestsFile)
