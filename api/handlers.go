@@ -4,7 +4,9 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"io"
+	"log"
 	"net/http"
+	"strings"
 
 	"github.com/go-chi/chi/v5"
 	oerr "github.com/score-spec/score-orchestrator/internal/errors"
@@ -21,7 +23,7 @@ func handleDeploy(runner *pipeline.Runner) http.HandlerFunc {
 
 		ct := r.Header.Get("Content-Type")
 		switch {
-		case len(ct) >= 19 && ct[:19] == "multipart/form-data":
+		case strings.HasPrefix(strings.ToLower(ct), "multipart/form-data"):
 			if err := r.ParseMultipartForm(10 << 20); err != nil {
 				writeError(w, oerr.New(oerr.CodeInvalidInput, "invalid multipart form", err.Error(), "validate", 400))
 				return
@@ -69,7 +71,6 @@ func handleDeploy(runner *pipeline.Runner) http.HandlerFunc {
 			writeError(w, oe)
 			return
 		}
-		// If there's a deploy error but we have a result, return 500 with result embedded.
 		if oe != nil {
 			writeError(w, oe)
 			return
@@ -114,7 +115,9 @@ func handleManifest(backend state.StateBackend) http.HandlerFunc {
 		}
 		w.Header().Set("Content-Type", "application/yaml")
 		w.WriteHeader(http.StatusOK)
-		w.Write(data)
+		if _, err := w.Write(data); err != nil {
+			log.Printf("handleManifest: write: %v", err)
+		}
 	}
 }
 
@@ -231,7 +234,7 @@ func buildStatusResponse(org, env, workload string, files *state.WorkloadFiles) 
 		var rStatus string
 
 		for uid, keys := range outputs {
-			if uid == name || len(uid) > len(name) && uid[:len(name)] == name {
+			if uid == name || (len(uid) > len(name) && uid[:len(name)] == name && (uid[len(name)] == '.' || uid[len(name)] == '#')) {
 				outputKeys = keys
 				break
 			}
