@@ -89,7 +89,11 @@ func (b *S3Backend) PullState(ctx context.Context, org, env, workload string) ([
 }
 
 func (b *S3Backend) PushState(ctx context.Context, org, env, workload string, stateYAML []byte, etag string) error {
-	err := b.putObject(ctx, b.key(org, env, workload, "state.yaml"), stateYAML, etag)
+	ifMatch := etag
+	if ifMatch != "" {
+		ifMatch = `"` + ifMatch + `"`
+	}
+	err := b.putObject(ctx, b.key(org, env, workload, "state.yaml"), stateYAML, ifMatch)
 	if err != nil {
 		// S3 returns HTTP 412 when If-Match condition fails.
 		var respErr *smithyhttp.ResponseError
@@ -104,7 +108,7 @@ func (b *S3Backend) PushState(ctx context.Context, org, env, workload string, st
 func (b *S3Backend) PushMeta(ctx context.Context, org, env, workload string, meta *DeployMeta) error {
 	data, err := json.Marshal(meta)
 	if err != nil {
-		return err
+		return fmt.Errorf("marshal deploy_meta: %w", err)
 	}
 	return b.putObject(ctx, b.key(org, env, workload, "deploy_meta.json"), data, "")
 }

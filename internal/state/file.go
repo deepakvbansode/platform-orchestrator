@@ -48,6 +48,9 @@ func (b *FileBackend) PullState(ctx context.Context, org, env, workload string) 
 func (b *FileBackend) PushState(ctx context.Context, org, env, workload string, stateYAML []byte, etag string) error {
 	p := b.path(org, env, workload, "state.yaml")
 	// ETag conflict check: re-read current content and compare.
+	// Note: This check is not atomic (TOCTOU); a concurrent write can slip between
+	// the ReadFile and WriteFile. The file backend is intended for single-node use
+	// where the platform enforces single-writer semantics per workload.
 	if etag != "" {
 		current, err := os.ReadFile(p)
 		if err != nil && !errors.Is(err, os.ErrNotExist) {
@@ -70,7 +73,7 @@ func (b *FileBackend) PushMeta(ctx context.Context, org, env, workload string, m
 	}
 	data, err := json.Marshal(meta)
 	if err != nil {
-		return err
+		return fmt.Errorf("marshal deploy_meta: %w", err)
 	}
 	return os.WriteFile(p, data, 0644)
 }
