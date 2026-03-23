@@ -52,7 +52,7 @@ func (d *GitDeployer) Deploy(ctx context.Context, req DeployRequest) error {
 			// Quote the key path to handle paths with spaces.
 		// StrictHostKeyChecking=no is intentional for CI environments.
 		env = append(env, fmt.Sprintf(
-				"GIT_SSH_COMMAND=ssh -i '%s' -o StrictHostKeyChecking=no",
+				"GIT_SSH_COMMAND=ssh -i %s -o StrictHostKeyChecking=no",
 				d.cfg.Auth.SSHKeyFile,
 			))
 		}

@@ -6,6 +6,7 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"regexp"
 	"strings"
 
 	"github.com/go-chi/chi/v5"
@@ -67,10 +68,6 @@ func handleDeploy(runner *pipeline.Runner) http.HandlerFunc {
 		}
 
 		result, oe := runner.Run(r.Context(), req)
-		if oe != nil && result == nil {
-			writeError(w, oe)
-			return
-		}
 		if oe != nil {
 			writeError(w, oe)
 			return
@@ -79,12 +76,28 @@ func handleDeploy(runner *pipeline.Runner) http.HandlerFunc {
 	}
 }
 
+var identityRe = regexp.MustCompile(`^[a-zA-Z0-9_-]+$`)
+
+func validateIdentity(org, env, workload string) *oerr.OrchestratorError {
+	for _, v := range []string{org, env, workload} {
+		if !identityRe.MatchString(v) {
+			return oerr.New(oerr.CodeInvalidInput, "org, env, and workload must match [a-zA-Z0-9_-]+", "", "validate", 400)
+		}
+	}
+	return nil
+}
+
 // handleStatus handles GET /api/v1/workloads/{org}/{env}/{workload}/status.
 func handleStatus(backend state.StateBackend) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		org := chi.URLParam(r, "org")
 		env := chi.URLParam(r, "env")
 		workload := chi.URLParam(r, "workload")
+
+		if oe := validateIdentity(org, env, workload); oe != nil {
+			writeError(w, oe)
+			return
+		}
 
 		files, err := backend.GetStatus(r.Context(), org, env, workload)
 		if err != nil {
@@ -103,6 +116,11 @@ func handleManifest(backend state.StateBackend) http.HandlerFunc {
 		org := chi.URLParam(r, "org")
 		env := chi.URLParam(r, "env")
 		workload := chi.URLParam(r, "workload")
+
+		if oe := validateIdentity(org, env, workload); oe != nil {
+			writeError(w, oe)
+			return
+		}
 
 		data, err := backend.GetManifest(r.Context(), org, env, workload)
 		if err != nil {

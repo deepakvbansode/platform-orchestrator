@@ -20,7 +20,7 @@ func RunInit(ctx context.Context, workDir string) error {
 // RunGenerate runs `score-k8s generate --output <outputFile>` in workDir.
 // Returns the combined output alongside any error so callers can surface it.
 func RunGenerate(ctx context.Context, workDir, outputFile string) (string, error) {
-	cmd := exec.CommandContext(ctx, "score-k8s", "generate", "--output", outputFile)
+	cmd := exec.CommandContext(ctx, "score-k8s", "generate", "score.yaml", "--output", outputFile)
 	cmd.Dir = workDir
 	out, err := cmd.CombinedOutput()
 	if err != nil {
