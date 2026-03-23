@@ -49,8 +49,10 @@ func (d *GitDeployer) Deploy(ctx context.Context, req DeployRequest) error {
 		}
 	case "ssh":
 		if d.cfg.Auth.SSHKeyFile != "" {
-			env = append(env, fmt.Sprintf(
-				"GIT_SSH_COMMAND=ssh -i %s -o StrictHostKeyChecking=no",
+			// Quote the key path to handle paths with spaces.
+		// StrictHostKeyChecking=no is intentional for CI environments.
+		env = append(env, fmt.Sprintf(
+				"GIT_SSH_COMMAND=ssh -i '%s' -o StrictHostKeyChecking=no",
 				d.cfg.Auth.SSHKeyFile,
 			))
 		}
@@ -86,7 +88,11 @@ func (d *GitDeployer) Deploy(ctx context.Context, req DeployRequest) error {
 	if err := run(tmpDir, "config", "user.name", "score-orchestrator"); err != nil {
 		return err
 	}
-	if err := run(tmpDir, "add", dst); err != nil {
+	relDst, err := filepath.Rel(tmpDir, dst)
+	if err != nil {
+		return fmt.Errorf("compute relative path: %w", err)
+	}
+	if err := run(tmpDir, "add", relDst); err != nil {
 		return err
 	}
 	if err := run(tmpDir, "commit", "-m", fmt.Sprintf("deploy: %s/%s/%s", req.Org, req.Env, req.Workload)); err != nil {
