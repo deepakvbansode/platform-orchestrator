@@ -10,9 +10,9 @@ import (
 	"strings"
 
 	"github.com/go-chi/chi/v5"
-	oerr "github.com/score-spec/score-orchestrator/internal/errors"
-	"github.com/score-spec/score-orchestrator/internal/pipeline"
-	"github.com/score-spec/score-orchestrator/internal/state"
+	oerr "github.com/deepakvbansode/platform-orchestrator/internal/errors"
+	"github.com/deepakvbansode/platform-orchestrator/internal/pipeline"
+	"github.com/deepakvbansode/platform-orchestrator/internal/state"
 	"go.yaml.in/yaml/v3"
 )
 

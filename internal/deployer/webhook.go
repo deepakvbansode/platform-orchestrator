@@ -8,8 +8,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/score-spec/score-orchestrator/internal/config"
-	"github.com/score-spec/score-orchestrator/internal/interpolate"
+	"github.com/deepakvbansode/platform-orchestrator/internal/config"
+	"github.com/deepakvbansode/platform-orchestrator/internal/interpolate"
 )
 
 // WebhookDeployer fires an HTTP request to a configurable endpoint.

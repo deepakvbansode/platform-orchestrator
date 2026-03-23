@@ -7,11 +7,11 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/score-spec/score-orchestrator/internal/deployer"
-	oerr "github.com/score-spec/score-orchestrator/internal/errors"
-	"github.com/score-spec/score-orchestrator/internal/provisioner"
-	"github.com/score-spec/score-orchestrator/internal/score"
-	"github.com/score-spec/score-orchestrator/internal/state"
+	"github.com/deepakvbansode/platform-orchestrator/internal/deployer"
+	oerr "github.com/deepakvbansode/platform-orchestrator/internal/errors"
+	"github.com/deepakvbansode/platform-orchestrator/internal/provisioner"
+	"github.com/deepakvbansode/platform-orchestrator/internal/score"
+	"github.com/deepakvbansode/platform-orchestrator/internal/state"
 )
 
 // Runner holds the wired-up dependencies for the deploy pipeline.

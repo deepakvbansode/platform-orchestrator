@@ -6,8 +6,8 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
-	"github.com/score-spec/score-orchestrator/internal/pipeline"
-	"github.com/score-spec/score-orchestrator/internal/state"
+	"github.com/deepakvbansode/platform-orchestrator/internal/pipeline"
+	"github.com/deepakvbansode/platform-orchestrator/internal/state"
 )
 
 // Server holds the HTTP server and its dependencies.

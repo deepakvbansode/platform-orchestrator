@@ -4,11 +4,11 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/score-spec/score-orchestrator/internal/config"
-	"github.com/score-spec/score-orchestrator/internal/deployer"
-	"github.com/score-spec/score-orchestrator/internal/pipeline"
-	"github.com/score-spec/score-orchestrator/internal/provisioner"
-	"github.com/score-spec/score-orchestrator/internal/state"
+	"github.com/deepakvbansode/platform-orchestrator/internal/config"
+	"github.com/deepakvbansode/platform-orchestrator/internal/deployer"
+	"github.com/deepakvbansode/platform-orchestrator/internal/pipeline"
+	"github.com/deepakvbansode/platform-orchestrator/internal/provisioner"
+	"github.com/deepakvbansode/platform-orchestrator/internal/state"
 )
 
 func buildBackend(ctx context.Context, cfg *config.Config) (state.StateBackend, error) {

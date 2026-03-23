@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"regexp"
 
-	oerr "github.com/score-spec/score-orchestrator/internal/errors"
+	oerr "github.com/deepakvbansode/platform-orchestrator/internal/errors"
 	"go.yaml.in/yaml/v3"
 )
 

@@ -1,6 +1,6 @@
 package main
 
-import "github.com/score-spec/score-orchestrator/cmd"
+import "github.com/deepakvbansode/platform-orchestrator/cmd"
 
 func main() {
 	cmd.Execute()

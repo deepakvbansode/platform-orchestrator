@@ -1,0 +1,40 @@
+{
+  "permissions": {
+    "allow": [
+      "WebSearch",
+      "WebFetch(domain:docs.score.dev)",
+      "WebFetch(domain:github.com)",
+      "Bash(go mod:*)",
+      "Bash(go get:*)",
+      "Bash(git init:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git -C /Users/deepak.bansodegruve.ai/Documents/projects/platform-score-orchestrator log --oneline)",
+      "Bash(git -C /Users/deepak.bansodegruve.ai/Documents/projects/platform-score-orchestrator show --stat HEAD)",
+      "Bash(git -C /Users/deepak.bansodegruve.ai/Documents/projects/platform-score-orchestrator status)",
+      "Bash(go version:*)",
+      "Bash(go vet:*)",
+      "Bash(go list:*)",
+      "Bash(python3 -c \"import json,sys; mods=[json.loads\\(l\\) for l in sys.stdin.read\\(\\).replace\\(''''}\\\\n{'''',''''}\\\\n\\\\x00{''''\\).split\\(''''\\\\x00''''\\)]; direct=[m for m in mods if not m.get\\(''''Indirect'''',False\\)]; print\\(''''\\\\n''''.join\\(m[''''Path''''] for m in direct\\)\\)\")",
+      "Bash(python3 -c \"print\\(''Go 1.25 released?''\\)\")",
+      "Bash(go build:*)",
+      "Bash(git -C /Users/deepak.bansodegruve.ai/Documents/projects/platform-score-orchestrator add internal/interpolate/interpolate.go)",
+      "Bash(git -C /Users/deepak.bansodegruve.ai/Documents/projects/platform-score-orchestrator commit -m \"feat: add interpolation for request-context and env vars\")",
+      "Bash(git -C /Users/deepak.bansodegruve.ai/Documents/projects/platform-score-orchestrator add internal/errors/errors.go)",
+      "Bash(git -C /Users/deepak.bansodegruve.ai/Documents/projects/platform-score-orchestrator commit -m \"feat: add orchestrator error types and codes\")",
+      "Bash(find /Users/deepak.bansodegruve.ai/Documents/projects/platform-score-orchestrator -path */spf13/viper/*.go -name viper.go)",
+      "Bash(find /Users/deepak.bansodegruve.ai/Documents/projects/platform-score-orchestrator -path */spf13/viper* -name *.go)",
+      "Read(//Users/deepak.bansodegruve.ai/go/pkg/mod/github.com/aws/**)",
+      "Bash(grep -rn OperationError ~/go/pkg/mod/github.com/aws/smithy-go@v1.24.2/*.go)",
+      "Bash(git -C /Users/deepak.bansodegruve.ai/Documents/projects/platform-score-orchestrator add internal/pipeline/pipeline.go)",
+      "Bash(git -C /Users/deepak.bansodegruve.ai/Documents/projects/platform-score-orchestrator commit -m \"feat: add core deploy pipeline \\(12-step orchestration\\)\")",
+      "Bash(echo \"Exit: $?\")",
+      "Bash(echo \"Exit code: $?\")",
+      "Bash(./score-orchestrator --help)",
+      "Bash(./score-orchestrator deploy:*)",
+      "Bash(./score-orchestrator server:*)",
+      "Bash(score-k8s generate:*)",
+      "Bash(xargs sed:*)"
+    ]
+  }
+}

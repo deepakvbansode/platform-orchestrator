@@ -1,4 +1,4 @@
-module github.com/score-spec/score-orchestrator
+module github.com/deepakvbansode/platform-orchestrator
 
 go 1.24
 

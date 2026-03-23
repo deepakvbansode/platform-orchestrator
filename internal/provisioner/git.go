@@ -7,7 +7,7 @@ import (
 	"os/exec"
 	"path/filepath"
 
-	"github.com/score-spec/score-orchestrator/internal/config"
+	"github.com/deepakvbansode/platform-orchestrator/internal/config"
 )
 
 // GitSource shallow-clones a git repo and copies *.provisioners.yaml from a subpath.

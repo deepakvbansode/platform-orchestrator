@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 
-	oerr "github.com/score-spec/score-orchestrator/internal/errors"
+	oerr "github.com/deepakvbansode/platform-orchestrator/internal/errors"
 )
 
 type errorResponse struct {

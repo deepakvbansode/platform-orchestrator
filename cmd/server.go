@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	"github.com/spf13/cobra"
-	"github.com/score-spec/score-orchestrator/api"
+	"github.com/deepakvbansode/platform-orchestrator/api"
 )
 
 var serverPort int

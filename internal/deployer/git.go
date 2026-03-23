@@ -8,8 +8,8 @@ import (
 	"os/exec"
 	"path/filepath"
 
-	"github.com/score-spec/score-orchestrator/internal/config"
-	"github.com/score-spec/score-orchestrator/internal/interpolate"
+	"github.com/deepakvbansode/platform-orchestrator/internal/config"
+	"github.com/deepakvbansode/platform-orchestrator/internal/interpolate"
 )
 
 // GitDeployer clones a git repo, copies the manifest, commits, and pushes.

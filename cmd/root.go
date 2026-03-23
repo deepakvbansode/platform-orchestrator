@@ -5,7 +5,7 @@ import (
 	"os"
 
 	"github.com/spf13/cobra"
-	"github.com/score-spec/score-orchestrator/internal/config"
+	"github.com/deepakvbansode/platform-orchestrator/internal/config"
 )
 
 var (
