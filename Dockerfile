@@ -25,8 +25,10 @@ RUN apk add --no-cache curl tar && \
 # --- Stage 3: minimal runtime image ---
 FROM gcr.io/distroless/static-debian12:nonroot
 
-COPY --from=builder        /score-orchestrator       /score-orchestrator
-COPY --from=score-k8s-fetcher /usr/local/bin/score-k8s /usr/local/bin/score-k8s
+COPY --from=builder           /score-orchestrator           /score-orchestrator
+COPY --from=score-k8s-fetcher /usr/local/bin/score-k8s      /usr/local/bin/score-k8s
+# Default config — override at runtime by mounting a ConfigMap at /etc/orchestrator.
+COPY orchestrator.yaml        /etc/orchestrator/orchestrator.yaml
 
 EXPOSE 8080
 
