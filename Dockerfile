@@ -33,10 +33,12 @@ RUN apk add --no-cache curl && \
       -o /usr/local/bin/kubectl && \
     chmod +x /usr/local/bin/kubectl
 
-# --- Stage 4: minimal runtime image ---
-FROM gcr.io/distroless/static-debian12:nonroot
+# --- Stage 4: runtime image ---
+FROM alpine:3.21
 
-COPY --from=builder           /score-orchestrator           /score-orchestrator
+RUN apk add --no-cache git
+
+COPY --from=builder           /score-orchestrator           /usr/local/bin/score-orchestrator
 COPY --from=score-k8s-fetcher /usr/local/bin/score-k8s      /usr/local/bin/score-k8s
 COPY --from=kubectl-fetcher   /usr/local/bin/kubectl        /usr/local/bin/kubectl
 # Default config — override at runtime by mounting a ConfigMap at /etc/orchestrator.
@@ -44,4 +46,4 @@ COPY orchestrator.yaml        /etc/orchestrator/orchestrator.yaml
 
 EXPOSE 8080
 
-ENTRYPOINT ["/score-orchestrator", "server"]
+ENTRYPOINT ["/usr/local/bin/score-orchestrator", "server"]
