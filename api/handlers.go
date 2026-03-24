@@ -32,6 +32,7 @@ func handleDeploy(runner *pipeline.Runner) http.HandlerFunc {
 			req.Org = r.FormValue("org")
 			req.Env = r.FormValue("env")
 			req.Workload = r.FormValue("workload")
+			req.ImagePath = r.FormValue("image")
 			f, _, err := r.FormFile("score")
 			if err != nil {
 				writeError(w, oerr.New(oerr.CodeInvalidInput, "score file missing from form", err.Error(), "validate", 400))
@@ -51,6 +52,7 @@ func handleDeploy(runner *pipeline.Runner) http.HandlerFunc {
 				Env      string `json:"env"`
 				Workload string `json:"workload"`
 				Score    string `json:"score"` // base64 encoded
+			Image    string `json:"image"` // optional docker image override
 			}
 			if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
 				writeError(w, oerr.New(oerr.CodeInvalidInput, "invalid JSON body", err.Error(), "validate", 400))
@@ -59,6 +61,7 @@ func handleDeploy(runner *pipeline.Runner) http.HandlerFunc {
 			req.Org = body.Org
 			req.Env = body.Env
 			req.Workload = body.Workload
+			req.ImagePath = body.Image
 			decoded, err := base64.StdEncoding.DecodeString(body.Score)
 			if err != nil {
 				writeError(w, oerr.New(oerr.CodeInvalidInput, "score field must be base64-encoded", err.Error(), "validate", 400))

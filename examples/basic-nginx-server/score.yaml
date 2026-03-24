@@ -1,0 +1,7 @@
+apiVersion: score.dev/v1b1
+metadata:
+  name: my-service
+containers:
+  main:
+    image: nginx:latest
+resources: {}

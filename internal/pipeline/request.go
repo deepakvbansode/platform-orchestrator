@@ -8,6 +8,7 @@ type DeployRequest struct {
 	Env       string
 	Workload  string
 	ScoreYAML []byte // raw score.yaml content
+	ImagePath string // optional docker image override (e.g. "myapp=registry/image:tag")
 }
 
 // DeployResult is returned on pipeline success.

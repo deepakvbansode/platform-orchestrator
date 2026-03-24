@@ -119,7 +119,7 @@ func (r *Runner) Run(ctx context.Context, req DeployRequest) (*DeployResult, *oe
 	// Step 6: Run score-k8s generate.
 	log.Info("step 6: running score-k8s generate")
 	manifestsFile := filepath.Join(workDir, "manifests.yaml")
-	genOutput, genErr := score.RunGenerate(ctx, workDir, manifestsFile)
+	genOutput, genErr := score.RunGenerate(ctx, workDir, manifestsFile, req.ImagePath)
 	if genErr != nil {
 		log.Error("score-k8s generate failed", "error", genErr, "output", genOutput)
 		meta := &state.DeployMeta{

@@ -26,11 +26,17 @@ func RunInit(ctx context.Context, workDir string) error {
 }
 
 // RunGenerate runs `score-k8s generate score.yaml --output <outputFile>` in workDir.
+// If imagePath is non-empty it is passed as `--image <imagePath>` to override the container image.
 // Returns the combined output alongside any error so callers can surface it.
-func RunGenerate(ctx context.Context, workDir, outputFile string) (string, error) {
+func RunGenerate(ctx context.Context, workDir, outputFile, imagePath string) (string, error) {
 	log := logger.Get()
 	log.Debug("exec: score-k8s generate", "work_dir", workDir, "output_file", outputFile)
-	cmd := exec.CommandContext(ctx, "score-k8s", "generate", "score.yaml", "--output", outputFile)
+	args := []string{"generate", "score.yaml", "--output", outputFile}
+	if imagePath != "" {
+		args = append(args, "--image", imagePath)
+		log.Debug("score-k8s generate: overriding image", "image", imagePath)
+	}
+	cmd := exec.CommandContext(ctx, "score-k8s", args...)
 	cmd.Dir = workDir
 	out, err := cmd.CombinedOutput()
 	if err != nil {
