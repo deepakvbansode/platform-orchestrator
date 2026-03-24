@@ -1,0 +1,50 @@
+# Provisions a Kubernetes Ingress resource using the nginx ingress controller.
+# Supports params: path (required), port (required), host (optional).
+- uri: template://custome-provisioners/route
+  type: route
+  description: Provisions an nginx Ingress for the workload service.
+  init: |
+    {{ if not .Params.path }}{{ fail "params.path is required" }}{{ end }}
+    {{ if not (regexMatch "^/" .Params.path) }}{{ fail "params.path must start with /" }}{{ end }}
+    {{ if not .Params.port }}{{ fail "params.port is required" }}{{ end }}
+    {{ $ports := (index .WorkloadServices .SourceWorkload).Ports }}
+    {{ if not $ports }}{{ fail "no service ports exist" }}{{ end }}
+    {{ $port := index $ports (print .Params.port) }}
+    {{ if not $port.TargetPort }}{{ fail "params.port is not a named service port" }}{{ end }}
+  state: |
+    ingressName: ingress-{{ .SourceWorkload }}-{{ substr 0 8 .Guid | lower }}
+  manifests: |
+    - apiVersion: networking.k8s.io/v1
+      kind: Ingress
+      metadata:
+        name: {{ .State.ingressName }}
+        {{ if ne .Namespace "" }}
+        namespace: {{ .Namespace }}
+        {{ end }}
+        annotations:
+          k8s.score.dev/source-workload: {{ .SourceWorkload }}
+          k8s.score.dev/resource-uid: {{ .Uid }}
+          k8s.score.dev/resource-guid: {{ .Guid }}
+          nginx.ingress.kubernetes.io/rewrite-target: /$2
+          nginx.ingress.kubernetes.io/use-regex: "true"
+        labels:
+          app.kubernetes.io/managed-by: score-k8s
+          app.kubernetes.io/name: {{ .State.ingressName }}
+          app.kubernetes.io/instance: {{ .State.ingressName }}
+      spec:
+        ingressClassName: nginx
+        rules:
+        - {{ if .Params.host }}host: {{ .Params.host | quote }}
+          {{ end }}http:
+            paths:
+            - path: {{ printf "%s(/|$)(.*)" .Params.path | quote }}
+              pathType: ImplementationSpecific
+              backend:
+                service:
+                  name: {{ (index .WorkloadServices .SourceWorkload).ServiceName }}
+                  port:
+                    number: {{ .Params.port }}
+  supported_params:
+    - path
+    - port
+    - host

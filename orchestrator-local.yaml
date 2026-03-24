@@ -28,9 +28,11 @@ provisioners:
 deployers:
   source: kubectl
   kubectl:
-    # No kubeconfig or context — kubectl uses the pod's ServiceAccount token
-    # automatically via in-cluster config (/var/run/secrets/kubernetes.io/serviceaccount/).
-    namespace: default
+    type: kubectl
+    kubectl:
+      kubeconfig: ./.kube/config
+      namespace: ""          # resolved from deploy-time context - why we need it
+      context: "rancher-desktop"
   git:
     type: git
     git:
