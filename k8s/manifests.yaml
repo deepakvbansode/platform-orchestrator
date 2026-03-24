@@ -1,0 +1,94 @@
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+    annotations:
+        k8s.score.dev/resource-guid: 4eaa4a80-9fc5-4905-e99d-e051324ccfcd
+        k8s.score.dev/resource-uid: route.default#platform-orchestrator.route
+        k8s.score.dev/source-workload: platform-orchestrator
+        nginx.ingress.kubernetes.io/rewrite-target: /$2
+        nginx.ingress.kubernetes.io/use-regex: "true"
+    labels:
+        app.kubernetes.io/instance: ingress-platform-orchestrator-4eaa4a80
+        app.kubernetes.io/managed-by: score-k8s
+        app.kubernetes.io/name: ingress-platform-orchestrator-4eaa4a80
+    name: ingress-platform-orchestrator-4eaa4a80
+spec:
+    ingressClassName: nginx
+    rules:
+        - http:
+            paths:
+                - backend:
+                    service:
+                        name: platform-orchestrator
+                        port:
+                            number: 8080
+                  path: /orchestrator(/|$)(.*)
+                  pathType: ImplementationSpecific
+---
+apiVersion: v1
+kind: Service
+metadata:
+    annotations:
+        k8s.score.dev/workload-name: platform-orchestrator
+    labels:
+        app.kubernetes.io/instance: platform-orchestrator-b843d69318
+        app.kubernetes.io/managed-by: score-k8s
+        app.kubernetes.io/name: platform-orchestrator
+    name: platform-orchestrator
+spec:
+    ports:
+        - name: http
+          port: 8080
+          protocol: TCP
+          targetPort: 8080
+    selector:
+        app.kubernetes.io/instance: platform-orchestrator-b843d69318
+status:
+    loadBalancer: {}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+    annotations:
+        k8s.score.dev/workload-name: platform-orchestrator
+    labels:
+        app.kubernetes.io/instance: platform-orchestrator-b843d69318
+        app.kubernetes.io/managed-by: score-k8s
+        app.kubernetes.io/name: platform-orchestrator
+    name: platform-orchestrator
+spec:
+    selector:
+        matchLabels:
+            app.kubernetes.io/instance: platform-orchestrator-b843d69318
+    strategy: {}
+    template:
+        metadata:
+            annotations:
+                k8s.score.dev/workload-name: platform-orchestrator
+            labels:
+                app.kubernetes.io/instance: platform-orchestrator-b843d69318
+                app.kubernetes.io/managed-by: score-k8s
+                app.kubernetes.io/name: platform-orchestrator
+        spec:
+            serviceAccountName: platform-orchestrator
+            containers:
+                - command:
+                    - /score-orchestrator
+                    - server
+                    - --config
+                    - /etc/orchestrator/orchestrator.yaml
+                    - --port
+                    - "8080"
+                  image: docker.io/deepakbansode/platform-orchestrator:519002ffe95986f83e57bfc3b0bc9b1e88491df1
+                  livenessProbe:
+                    httpGet:
+                        path: /healthz
+                        port: 8080
+                  name: server
+                  readinessProbe:
+                    httpGet:
+                        path: /healthz
+                        port: 8080
+                  resources: {}
+status: {}
