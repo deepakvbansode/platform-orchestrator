@@ -1,0 +1,71 @@
+apiVersion: score.dev/v1b1
+metadata:
+  name: platform-orchestrator
+
+containers:
+  server:
+    image: ghcr.io/deepakvbansode/platform-orchestrator:latest
+    command:
+      - /score-orchestrator
+      - server
+      - --config
+      - /etc/orchestrator/orchestrator.yaml
+      - --port
+      - "8080"
+    variables:
+      # AWS credentials for the S3 state backend.
+      # Populated from the secret resource below.
+      AWS_ACCESS_KEY_ID: ${resources.aws-creds.access_key_id}
+      AWS_SECRET_ACCESS_KEY: ${resources.aws-creds.secret_access_key}
+      AWS_REGION: ${resources.aws-creds.region}
+    volumes:
+      - source: ${resources.config-volume.source}
+        target: /etc/orchestrator
+        readOnly: true
+    livenessProbe:
+      httpGet:
+        path: /healthz
+        port: 8080
+      initialDelaySeconds: 5
+      periodSeconds: 15
+    readinessProbe:
+      httpGet:
+        path: /healthz
+        port: 8080
+      initialDelaySeconds: 3
+      periodSeconds: 10
+
+service:
+  ports:
+    http:
+      port: 8080
+      targetPort: 8080
+
+resources:
+  # ConfigMap volume holding orchestrator.yaml.
+  # The ConfigMap must be pre-created in the cluster with the key orchestrator.yaml.
+  config-volume:
+    type: volume
+    params:
+      type: configmap
+      name: platform-orchestrator-config
+
+  # Secret holding AWS credentials for the S3 state backend.
+  aws-creds:
+    type: secret
+    params:
+      name: platform-orchestrator-aws-creds
+      keys:
+        - access_key_id
+        - secret_access_key
+        - region
+
+  dns:
+    type: dns
+
+  route:
+    type: route
+    params:
+      host: ${resources.dns.host}
+      path: /
+      port: 8080

@@ -36,7 +36,8 @@
       "Bash(score-k8s generate:*)",
       "Bash(xargs sed:*)",
       "Bash(make help:*)",
-      "Bash(python3 -c \":*)"
+      "Bash(python3 -c \":*)",
+      "WebFetch(domain:api.github.com)"
     ]
   }
 }
