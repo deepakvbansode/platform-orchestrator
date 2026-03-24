@@ -22,11 +22,23 @@ RUN apk add --no-cache curl tar && \
       | tar -xz -C /usr/local/bin score-k8s && \
     chmod +x /usr/local/bin/score-k8s
 
-# --- Stage 3: minimal runtime image ---
+# --- Stage 3: fetch kubectl ---
+FROM alpine:3.21 AS kubectl-fetcher
+
+ARG KUBECTL_VERSION=v1.32.3
+ARG TARGETARCH
+
+RUN apk add --no-cache curl && \
+    curl -fsSL "https://dl.k8s.io/release/${KUBECTL_VERSION}/bin/linux/${TARGETARCH}/kubectl" \
+      -o /usr/local/bin/kubectl && \
+    chmod +x /usr/local/bin/kubectl
+
+# --- Stage 4: minimal runtime image ---
 FROM gcr.io/distroless/static-debian12:nonroot
 
 COPY --from=builder           /score-orchestrator           /score-orchestrator
 COPY --from=score-k8s-fetcher /usr/local/bin/score-k8s      /usr/local/bin/score-k8s
+COPY --from=kubectl-fetcher   /usr/local/bin/kubectl        /usr/local/bin/kubectl
 # Default config — override at runtime by mounting a ConfigMap at /etc/orchestrator.
 COPY orchestrator.yaml        /etc/orchestrator/orchestrator.yaml
 
