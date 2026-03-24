@@ -2,7 +2,7 @@ name: CI
 
 on:
   push:
-    branches: [master]
+    branches: [main]
 
 jobs:
   build-and-push:
@@ -20,4 +20,4 @@ jobs:
         with:
           context: .
           push: true
-          tags: ${{ secrets.DOCKER_USERNAME }}/react-golden-template:${{ github.sha }},${{ secrets.DOCKER_USERNAME }}/react-golden-template:latest
+          tags: ${{ secrets.DOCKER_USERNAME }}/platform-orchestrator:${{ github.sha }},${{ secrets.DOCKER_USERNAME }}/platform-orchestrator:latest
