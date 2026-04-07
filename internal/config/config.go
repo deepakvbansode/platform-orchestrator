@@ -9,6 +9,14 @@ type Config struct {
 	State        StateConfig        `mapstructure:"state"`
 	Provisioners ProvisionersConfig `mapstructure:"provisioners"`
 	Deployer     DeployerConfig     `mapstructure:"deployers"`
+	Action       ActionConfig       `mapstructure:"action"`
+}
+
+// ActionConfig holds configuration for the self-service action pipeline.
+type ActionConfig struct {
+	// Namespace is injected as .Namespace into template provisioner contexts.
+	// If empty, generated manifests will omit the namespace field (uses kubectl default).
+	Namespace string `mapstructure:"namespace"`
 }
 
 type StateConfig struct {

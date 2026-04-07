@@ -3,13 +3,16 @@ package api
 import (
 	"encoding/base64"
 	"encoding/json"
+	"fmt"
 	"io"
 	"log"
 	"net/http"
 	"regexp"
 	"strings"
+	"time"
 
 	"github.com/go-chi/chi/v5"
+	"github.com/deepakvbansode/platform-orchestrator/internal/action"
 	oerr "github.com/deepakvbansode/platform-orchestrator/internal/errors"
 	"github.com/deepakvbansode/platform-orchestrator/internal/pipeline"
 	"github.com/deepakvbansode/platform-orchestrator/internal/state"
@@ -146,6 +149,104 @@ func handleHealthz() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, http.StatusOK, map[string]string{"status": "ok"})
 	}
+}
+
+// handleActionSubmit handles POST /api/v1/actions.
+// Accepts multipart/form-data (action file) or application/json (action field as base64).
+func handleActionSubmit(runner *action.Runner) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		var actionYAML []byte
+
+		ct := r.Header.Get("Content-Type")
+		switch {
+		case strings.HasPrefix(strings.ToLower(ct), "multipart/form-data"):
+			if err := r.ParseMultipartForm(10 << 20); err != nil {
+				writeError(w, oerr.New(oerr.CodeInvalidInput, "invalid multipart form", err.Error(), "validate", 400))
+				return
+			}
+			f, _, err := r.FormFile("action")
+			if err != nil {
+				writeError(w, oerr.New(oerr.CodeInvalidInput, "action file missing from form", err.Error(), "validate", 400))
+				return
+			}
+			defer f.Close()
+			data, err := io.ReadAll(f)
+			if err != nil {
+				writeError(w, oerr.New(oerr.CodeInvalidInput, "failed to read action file", err.Error(), "validate", 400))
+				return
+			}
+			actionYAML = data
+		default:
+			// JSON body with base64-encoded action field.
+			var body struct {
+				Action string `json:"action"` // base64-encoded platform-action.yaml
+			}
+			if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+				writeError(w, oerr.New(oerr.CodeInvalidInput, "invalid JSON body", err.Error(), "validate", 400))
+				return
+			}
+			decoded, err := base64.StdEncoding.DecodeString(body.Action)
+			if err != nil {
+				writeError(w, oerr.New(oerr.CodeInvalidInput, "action field must be base64-encoded", err.Error(), "validate", 400))
+				return
+			}
+			actionYAML = decoded
+		}
+
+		var spec action.ActionSpec
+		if err := yaml.Unmarshal(actionYAML, &spec); err != nil {
+			writeError(w, oerr.New(oerr.CodeInvalidInput, "invalid action YAML", err.Error(), "validate", 400))
+			return
+		}
+
+		// Inject runtime context from request headers (in production these would
+		// come from the authenticated Backstage session via a trusted header or JWT).
+		actCtx := action.ActionContext{
+			User:        headerOrDefault(r, "X-User", "unknown"),
+			Team:        headerOrDefault(r, "X-Team", ""),
+			Role:        headerOrDefault(r, "X-Role", ""),
+			Email:       headerOrDefault(r, "X-Email", ""),
+			RequestedAt: time.Now().UTC().Format(time.RFC3339),
+			RequestID:   fmt.Sprintf("act-%d", time.Now().UnixNano()),
+		}
+
+		req := action.ActionRequest{Spec: spec, Context: actCtx}
+		result, runErr := runner.Run(r.Context(), req)
+		if runErr != nil {
+			writeError(w, oerr.New("ACTION_FAILED", runErr.Error(), "", "action", 500))
+			return
+		}
+		writeJSON(w, http.StatusAccepted, result)
+	}
+}
+
+// handleActionStatus handles GET /api/v1/actions/{name}/status.
+func handleActionStatus(stateBackend action.ActionStateBackend) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		name := chi.URLParam(r, "name")
+		if name == "" {
+			writeError(w, oerr.New(oerr.CodeInvalidInput, "action name is required", "", "validate", 400))
+			return
+		}
+
+		s, err := stateBackend.GetState(r.Context(), name)
+		if err != nil {
+			writeError(w, oerr.New(oerr.CodeStatePullFailed, "failed to read action state", err.Error(), "state", 500))
+			return
+		}
+		if s == nil {
+			writeError(w, oerr.New(oerr.CodeWorkloadNotFound, fmt.Sprintf("action %q not found", name), "", "", 404))
+			return
+		}
+		writeJSON(w, http.StatusOK, s)
+	}
+}
+
+func headerOrDefault(r *http.Request, header, def string) string {
+	if v := r.Header.Get(header); v != "" {
+		return v
+	}
+	return def
 }
 
 // --- Status derivation ---

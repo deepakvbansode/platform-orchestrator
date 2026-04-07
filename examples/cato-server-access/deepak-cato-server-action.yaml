@@ -1,0 +1,27 @@
+apiVersion: platform.company.io/v1
+kind: Action
+metadata:
+  name: deepak-cato-server-access
+  labels:
+    team: platform
+    env: production
+  annotations:
+    description: "Grant Deepak temporary SSH access to the cato server"
+spec:
+  resourceType: ssh-access
+  operation: create
+  properties:
+    userEmail: deepak@company.io
+    publicKey: "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQC3... user@machine"
+    justification: "Debugging production issue on ticket PLAT-420"
+  lifecycle:
+    ttl: 24h
+    autoRevoke: true
+    renewable: true
+    maxRenewals: 2
+  notify:
+    onSuccess:
+      - deepak@company.io
+    onFailure:
+      - deepak@company.io
+      - platform-oncall@company.io

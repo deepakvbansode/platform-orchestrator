@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/deepakvbansode/platform-orchestrator/internal/action"
 	"github.com/deepakvbansode/platform-orchestrator/internal/config"
 	"github.com/deepakvbansode/platform-orchestrator/internal/deployer"
 	"github.com/deepakvbansode/platform-orchestrator/internal/pipeline"
@@ -66,4 +67,22 @@ func buildRunner(cfg *config.Config) (*pipeline.Runner, error) {
 		Provisioner: provSource,
 		Deployer:    deployers,
 	}, nil
+}
+
+func buildActionStateBackend(cfg *config.Config) action.ActionStateBackend {
+	// Reuse the file state base path so action state lives alongside workload state.
+	basePath := cfg.State.File.BasePath
+	if basePath == "" {
+		basePath = ".state"
+	}
+	return action.NewFileActionStateBackend(basePath)
+}
+
+func buildActionRunner(cfg *config.Config, provSource provisioner.ProvisionerSource, d deployer.Deployer, stateBackend action.ActionStateBackend) *action.Runner {
+	return &action.Runner{
+		Provisioner: provSource,
+		Deployer:    d,
+		State:       stateBackend,
+		Namespace:   cfg.Action.Namespace,
+	}
 }

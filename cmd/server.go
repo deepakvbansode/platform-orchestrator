@@ -17,8 +17,20 @@ var serverCmd = &cobra.Command{
 		if err != nil {
 			return err
 		}
+
+		provSource, err := buildProvisionerSource(cfg)
+		if err != nil {
+			return err
+		}
+		d, err := buildDeployers(cfg)
+		if err != nil {
+			return err
+		}
+		actionState := buildActionStateBackend(cfg)
+		actionRunner := buildActionRunner(cfg, provSource, d, actionState)
+
 		// Reuse the backend already wired into the runner — avoids creating a second client.
-		srv := api.NewServer(runner, runner.Backend, serverPort)
+		srv := api.NewServer(runner, runner.Backend, actionRunner, actionState, serverPort)
 		fmt.Printf("score-orchestrator server listening on :%d\n", serverPort)
 		return srv.Start()
 	},
